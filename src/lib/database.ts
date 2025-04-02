@@ -3,10 +3,10 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const dbConfig = {
-  user: 'postgresql',
+  user: 'loyalty',
   host: 'localhost',
   database: 'max_loyalty',
-  password: '123456',
+  password: 'Admin2025',
   port: 5432,
 };
 
