@@ -3,22 +3,22 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const dbConfig = {
-  user: 'loyalty',
+  user: 'postgresql',
   host: 'localhost',
   database: 'max_loyalty',
-  password: 'Admin2025',
+  password: '123456',
   port: 5432,
 };
 
 
 export async function getPgConnection(): Promise<Client> {
   const client = new Client(dbConfig);
-  await client.connect(); // Asegurarse de que se conecte al iniciar
+  await client.connect(); 
   return client; 
 }
 
 export async function executePgQuery(query: string, values: string[] = []) {
-  const client = await getPgConnection(); // Esperar a que devuelva el cliente conectado
+  const client = await getPgConnection();
   try {
     const result = await client.query(query, values);
     return result.rows; 
@@ -26,7 +26,7 @@ export async function executePgQuery(query: string, values: string[] = []) {
     console.error('Error ejecutando la consulta en PostgreSQL:', err);
     throw err;
   } finally {
-    client.end(); // Cerrar la conexión después de ejecutar la consulta
+    client.end();
   }
 }
 

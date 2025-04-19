@@ -3,8 +3,8 @@ import { executePgQuery } from '@/lib/database';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   
-  if (req.method !== 'GET') {
-    return res.status(405).json({ success: false, error: 'Método no permitido. Use POST' });
+  if (req.method !== 'POST') {
+    return res.status(405).json({ success: false, error: 'Método no permitido. Use GET' });
   }
 
   try {
