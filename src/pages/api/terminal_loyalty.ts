@@ -16,9 +16,31 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     for (const data of dataArray) {
-      const { cliente_id, establecimiento_id, fecha, monto, terminal_id } = data;
+      let { cliente_id, numero_tarjeta, establecimiento_id, fecha, monto, terminal_id } = data;
 
-   
+      
+      if (numero_tarjeta && !cliente_id) {
+        const getClienteIdQuery = `
+          SELECT cliente_id 
+          FROM tarjetas 
+          WHERE numero_tarjeta = $1;
+        `;
+        
+        const clienteResult = await executePgQuery(getClienteIdQuery, [numero_tarjeta]);
+        cliente_id = clienteResult[0]?.cliente_id;
+
+        if (!cliente_id) {
+          console.log(`No se encontró cliente_id para el número de tarjeta: ${numero_tarjeta}`);
+          continue;
+        }
+      }
+
+      // Validar que cliente_id exista (ya sea proporcionado o obtenido)
+      if (!cliente_id) {
+        console.log("Falta cliente_id y no se pudo obtener desde numero_tarjeta.");
+        continue;
+      }
+
       const insertTransactionQuery = `
         INSERT INTO transacciones (cliente_id, establecimiento_id, fecha, monto, terminal_id)
         VALUES ($1, $2, $3, $4, $5)
@@ -35,7 +57,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       console.log("Transacción ID:", transaccion_id);
 
-      
       const insertPuntosQuery = `
         INSERT INTO puntos (cliente_id, transaccion_id, debe, created_at)
         VALUES ($1, $2, $3, CURRENT_DATE);
