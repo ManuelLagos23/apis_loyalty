@@ -16,9 +16,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     for (const data of dataArray) {
-      let { cliente_id, numero_tarjeta, establecimiento_id, fecha, monto, terminal_id } = data;
+      let cliente_id;
+      const { numero_tarjeta, establecimiento_id, fecha, monto, terminal_id } = data;
 
-      
       if (numero_tarjeta && !cliente_id) {
         const getClienteIdQuery = `
           SELECT cliente_id 
@@ -35,7 +35,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
       }
 
-      // Validar que cliente_id exista (ya sea proporcionado o obtenido)
       if (!cliente_id) {
         console.log("Falta cliente_id y no se pudo obtener desde numero_tarjeta.");
         continue;
