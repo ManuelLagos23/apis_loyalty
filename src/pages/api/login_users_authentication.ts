@@ -65,13 +65,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
      
         e.nombre_empresa AS empresa_nombre,
         
-        c.nombre_centro_costos AS estacion_servicio_nombre,
+        t.estacion_servicio as establecimiento_id,
         t.codigo_terminal,
         t.nombre_terminal,
         t.id_activacion
       FROM terminales t
       LEFT JOIN empresas e ON t.empresa = e.id
-      LEFT JOIN costos c ON t.estacion_servicio = c.id
+     
       WHERE t.id = $1;
     `;
     const terminalDetailResult = await executePgQuery(terminalDetailQuery, [usuario.terminal_id]);
