@@ -2,20 +2,42 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { executePgQuery } from '@/lib/database';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  
   if (req.method !== 'POST') {
-    return res.status(405).json({ success: false, error: 'Método no permitido. Use GET' });
+    return res.status(405).json({ success: false, error: 'Método no permitido. Use POST' });
   }
 
   try {
-    
-    const { cliente_id } = req.body;
+    const { cliente_id, numero_tarjeta } = req.body;
 
-    if (!cliente_id) {
-      return res.status(400).json({ success: false, error: 'Falta el cliente_id en el cuerpo de la solicitud' });
+    
+    if (!cliente_id && !numero_tarjeta) {
+      return res.status(400).json({
+        success: false,
+        error: 'Debe proporcionar cliente_id o numero_tarjeta en el cuerpo de la solicitud',
+      });
     }
 
-    
+    let finalClienteId = cliente_id;
+
+   
+    if (!cliente_id && numero_tarjeta) {
+      const getClienteIdQuery = `
+        SELECT cliente_id 
+        FROM tarjetas 
+        WHERE numero_tarjeta = $1;
+      `;
+      
+      const clienteResult = await executePgQuery(getClienteIdQuery, [numero_tarjeta]);
+      finalClienteId = clienteResult[0]?.cliente_id;
+
+      if (!finalClienteId) {
+        return res.status(404).json({
+          success: false,
+          error: `No se encontró cliente_id para el número de tarjeta: ${numero_tarjeta}`,
+        });
+      }
+    }
+
     const selectQuery = `
       SELECT 
         cliente_id, 
@@ -27,12 +49,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       GROUP BY cliente_id;
     `;
 
-   
-    const result = await executePgQuery(selectQuery, [cliente_id]);
+    const result = await executePgQuery(selectQuery, [finalClienteId]);
 
-    
     if (result.length === 0) {
-      return res.status(404).json({ success: false, error: 'No se encontraron datos para el cliente_id proporcionado' });
+      return res.status(404).json({
+        success: false,
+        error: 'No se encontraron datos para el cliente_id proporcionado',
+      });
     }
 
     return res.status(200).json({
