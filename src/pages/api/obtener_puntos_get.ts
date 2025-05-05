@@ -43,13 +43,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const selectQuery = `
       SELECT 
-        cliente_id, 
-        COALESCE(SUM(debe), 0) AS total_debe, 
-        COALESCE(SUM(haber), 0) AS total_haber, 
-        COALESCE(SUM(debe), 0) - COALESCE(SUM(haber), 0) AS diferencia 
-      FROM puntos 
-      WHERE cliente_id = $1 
-      GROUP BY cliente_id;
+        p.cliente_id, 
+        COALESCE(SUM(p.debe), 0) AS total_debe, 
+        COALESCE(SUM(p.haber), 0) AS total_haber, 
+        COALESCE(SUM(p.debe), 0) - COALESCE(SUM(p.haber), 0) AS diferencia,
+        c.nombre AS cliente_nombre
+      FROM puntos p
+      LEFT JOIN clientes c ON p.cliente_id = c.id
+      WHERE p.cliente_id = $1 
+      GROUP BY p.cliente_id, c.nombre;
     `;
 
     const result = await executePgQuery(selectQuery, [finalClienteId]);
