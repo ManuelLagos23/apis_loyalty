@@ -44,9 +44,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const selectQuery = `
       SELECT 
         cliente_id, 
-        SUM(debe) AS total_debe, 
-        SUM(haber) AS total_haber, 
-        SUM(debe) - SUM(haber) AS diferencia 
+        COALESCE(SUM(debe), 0) AS total_debe, 
+        COALESCE(SUM(haber), 0) AS total_haber, 
+        COALESCE(SUM(debe), 0) - COALESCE(SUM(haber), 0) AS diferencia 
       FROM puntos 
       WHERE cliente_id = $1 
       GROUP BY cliente_id;
