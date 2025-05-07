@@ -52,7 +52,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       FROM puntos p
       LEFT JOIN clientes c ON p.cliente_id = c.id
       WHERE p.cliente_id = $1 and p.estado = true
-      GROUP BY p.cliente_id, c.nombre;
+      GROUP BY p.cliente_id, c.nombre, p.estado;
     `;
 
     const result = await executePgQuery(selectQuery, [finalClienteId]);
