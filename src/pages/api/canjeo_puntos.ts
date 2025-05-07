@@ -55,9 +55,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       const insertTransactionQuery = `
-        INSERT INTO canjeados (cliente_id, establecimiento_id, terminal_id, puntos_canjeados, created_at, numero_tarjeta)
-        VALUES ($1, $2, $3, $4, $5, $6)
-        RETURNING id;
+        INSERT INTO canjeados (cliente_id, establecimiento_id, terminal_id, puntos_canjeados, created_at, numero_tarjeta, estado)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        RETURNING id, estado;
       `;
 
       const transactionResult = await executePgQuery(insertTransactionQuery, [
@@ -66,26 +66,40 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         terminal_id,
         monto,
         fecha,
-        numero_tarjeta || null, // Guardar numero_tarjeta, o NULL si no se proporciona
+        numero_tarjeta || null,
+        true, // Explicitly pass true for estado
       ]);
       const canjeados_id = transactionResult[0]?.id;
 
       if (!canjeados_id) {
         errors.push(`No se pudo obtener el id de la transacción para el registro: ${JSON.stringify(data)}`);
-        console.log("No se pudo obtener el id de la transacción.");
+        console.log("No se pudo obtener el id de la transacción. Resultado:", transactionResult);
         continue;
       }
 
-      console.log("Transacción ID:", canjeados_id);
+      console.log("Transacción ID:", canjeados_id, "Estado:", transactionResult[0]?.estado);
 
       const insertPuntosQuery = `
-        INSERT INTO puntos (cliente_id, canjeados_id, haber, created_at)
-        VALUES ($1, $2, $3, CURRENT_DATE);
+        INSERT INTO puntos (cliente_id, canjeados_id, haber, created_at, estado)
+        VALUES ($1, $2, $3, $4, $5)
+        RETURNING id, estado;
       `;
 
-      await executePgQuery(insertPuntosQuery, [cliente_id, canjeados_id, monto]);
+      const puntosResult = await executePgQuery(insertPuntosQuery, [
+        cliente_id,
+        canjeados_id,
+        monto,
+        new Date(), // Use JavaScript Date for consistency
+        true, // Explicitly pass true for estado
+      ]);
 
-      console.log("Puntos insertados para la transacción", canjeados_id);
+      if (!puntosResult[0]?.id) {
+        errors.push(`No se pudo insertar el registro de puntos para canjeados_id: ${canjeados_id}`);
+        console.log("No se pudo insertar el registro de puntos. Resultado:", puntosResult);
+        continue;
+      }
+
+      console.log("Puntos insertados para la transacción", canjeados_id, "Estado:", puntosResult[0]?.estado);
       processedCount++;
     }
 

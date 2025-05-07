@@ -55,8 +55,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       const insertTransactionQuery = `
-        INSERT INTO transacciones (cliente_id, establecimiento_id, fecha, monto, terminal_id, numero_tarjeta)
-        VALUES ($1, $2, $3, $4, $5, $6)
+        INSERT INTO transacciones (cliente_id, establecimiento_id, fecha, monto, terminal_id, numero_tarjeta, estado)
+        VALUES ($1, $2, $3, $4, $5, $6, true)
         RETURNING id;
       `;
 
@@ -79,8 +79,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       console.log("Transacción ID:", transaccion_id);
 
       const insertPuntosQuery = `
-        INSERT INTO puntos (cliente_id, transaccion_id, debe, created_at)
-        VALUES ($1, $2, $3, CURRENT_DATE);
+        INSERT INTO puntos (cliente_id, transaccion_id, debe, created_at, estado)
+        VALUES ($1, $2, $3, CURRENT_DATE, true);
       `;
 
       await executePgQuery(insertPuntosQuery, [cliente_id, transaccion_id, monto]);

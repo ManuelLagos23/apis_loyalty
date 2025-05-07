@@ -47,10 +47,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         COALESCE(SUM(p.debe), 0) AS total_debe, 
         COALESCE(SUM(p.haber), 0) AS total_haber, 
         COALESCE(SUM(p.debe), 0) - COALESCE(SUM(p.haber), 0) AS diferencia,
-        c.nombre AS cliente_nombre
+        c.nombre AS cliente_nombre,
+        p.estado
       FROM puntos p
       LEFT JOIN clientes c ON p.cliente_id = c.id
-      WHERE p.cliente_id = $1 
+      WHERE p.cliente_id = $1 and p.estado = true
       GROUP BY p.cliente_id, c.nombre;
     `;
 
