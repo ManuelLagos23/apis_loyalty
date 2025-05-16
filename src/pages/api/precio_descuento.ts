@@ -105,13 +105,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       console.log(`No se encontró canal_id para cliente_id: ${finalClienteId}`);
     }
 
-    // Respuesta de éxito
-    return res.status(200).json({
-      success: true,
-      message: 'Unidades y descuento calculados con éxito.',
-      unidades: Number(unidades.toFixed(2)),
-      monto_descuento: Number(monto_descuento.toFixed(2))
-    });
+return res.status(200).json({
+  success: true,
+  message: 'Unidades y descuento calculados con éxito.',
+  cliente_id: finalClienteId,
+  unidades: Number(unidades.toFixed(2)),
+  monto_descuento: Number(monto_descuento.toFixed(2))
+});
+
   } catch (error) {
     console.error('Error en la API:', error);
     return res.status(500).json({ success: false, error: 'Error interno del servidor' });
