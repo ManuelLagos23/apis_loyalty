@@ -20,10 +20,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     for (const data of dataArray) {
       let cliente_id = data.cliente_id;
-      const { numero_tarjeta, establecimiento_id, fecha, monto, terminal_id } = data;
+      const { 
+        numero_tarjeta, 
+        establecimiento_id, 
+        fecha, 
+        monto, 
+        terminal_id, 
+        tipo_combustible_id, 
+        descuento = 0, 
+        unidades = null 
+      } = data;
 
       // Validar campos obligatorios
-      if (!establecimiento_id || !fecha || !monto || !terminal_id) {
+      if (!establecimiento_id || !fecha || !monto || !terminal_id || !tipo_combustible_id) {
         errors.push(`Faltan campos obligatorios en el registro: ${JSON.stringify(data)}`);
         console.log("Faltan campos obligatorios en el registro: ", data);
         continue;
@@ -54,9 +63,36 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         continue;
       }
 
+      // Buscar canal_id desde la tabla clientes
+      const getCanalIdQuery = `
+        SELECT canal_id 
+        FROM clientes 
+        WHERE id = $1;
+      `;
+      
+      const canalResult = await executePgQuery(getCanalIdQuery, [cliente_id]);
+      const canal_id = canalResult[0]?.canal_id;
+
+      if (!canal_id) {
+        errors.push(`No se encontró canal_id para cliente_id: ${cliente_id}`);
+        console.log(`No se encontró canal_id para cliente_id: ${cliente_id}`);
+      }
+
       const insertTransactionQuery = `
-        INSERT INTO transacciones (cliente_id, establecimiento_id, fecha, monto, terminal_id, numero_tarjeta, estado)
-        VALUES ($1, $2, $3, $4, $5, $6, true)
+        INSERT INTO transacciones (
+          cliente_id, 
+          establecimiento_id, 
+          fecha, 
+          monto, 
+          terminal_id, 
+          numero_tarjeta, 
+          tipo_combustible_id, 
+          descuento, 
+          unidades, 
+          canal_id, 
+          estado
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, true)
         RETURNING id;
       `;
 
@@ -66,7 +102,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         fecha,
         monto,
         terminal_id,
-        numero_tarjeta || null, // Guardar numero_tarjeta, o NULL si no se proporciona
+        numero_tarjeta || null,
+        tipo_combustible_id,
+        descuento,
+        unidades,
+        canal_id || null,
       ]);
       const transaccion_id = transactionResult[0]?.id;
 
