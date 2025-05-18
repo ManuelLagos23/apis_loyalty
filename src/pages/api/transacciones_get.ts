@@ -13,7 +13,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ success: false, error: 'El campo terminal_id es obligatorio y debe ser una cadena' });
     }
 
-    const selectQuery = 'SELECT id, cliente_id, establecimiento_id, fecha, monto, terminal_id FROM transacciones WHERE terminal_id = $1 and estado = true;';
+    const selectQuery = `
+      SELECT id, cliente_id, establecimiento_id, fecha, monto, terminal_id 
+      FROM transacciones 
+      WHERE terminal_id = $1 AND estado = true AND fecha = CURRENT_DATE;
+    `;
+    
     const result = await executePgQuery(selectQuery, [terminal_id]);
 
     return res.status(200).json({

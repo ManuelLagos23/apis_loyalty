@@ -11,7 +11,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     console.log("ESTOS SON LOS DATOS DEL OBJETO: ", dataArray);
 
- 
     if (!dataArray || Array.isArray(dataArray) || typeof dataArray !== 'object') {
       return res.status(400).json({
         success: false,
@@ -21,8 +20,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const { codigo_activacion } = dataArray;
 
-    console.log("Código de activación: " +codigo_activacion);
-
+    console.log("Código de activación: " + codigo_activacion);
 
     if (!codigo_activacion || typeof codigo_activacion !== 'string') {
       return res.status(400).json({
@@ -31,7 +29,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-   
     if (!/^\d{8}$/.test(codigo_activacion)) {
       return res.status(400).json({
         success: false,
@@ -39,7 +36,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
- 
     const queryTerminal = `
       SELECT id, empresa, estacion_servicio, codigo_terminal, nombre_terminal 
       FROM terminales 
@@ -57,15 +53,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const terminalId = queryResult[0].id;
 
-  
     const id_activacion = Math.floor(100000 + Math.random() * 900000).toString();
 
-    
     const updateQuery = `
       UPDATE terminales 
-      SET id_activacion = $1 
+      SET id_activacion = $1, codigo_activacion = NULL 
       WHERE id = $2 
-      RETURNING id, empresa, estacion_servicio, codigo_terminal, id_activacion;
+      RETURNING id, empresa, estacion_servicio, codigo_terminal, id_activacion, codigo_activacion;
     `;
 
     const updateResult = await executePgQuery(updateQuery, [id_activacion, terminalId]);
@@ -77,7 +71,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         data: updateResult[0],
       });
     } else {
-      throw new Error('Error al actualizar el campo id_activacion');
+      throw new Error('Error al actualizar los campos id_activacion y codigo_activacion');
     }
   } catch (error) {
     console.error('Error en la API:', error);
