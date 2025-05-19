@@ -56,7 +56,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       JOIN costos cs ON t.establecimiento_id = cs.id
       JOIN canales c ON t.canal_id = c.id
       JOIN tipo_combustible tc ON t.tipo_combustible_id = tc.id
-      WHERE t.terminal_id = 1 AND t.establecimiento_id = 1 AND t.estado = true and DATE(fecha AT TIME ZONE 'America/Mexico_City' AT TIME ZONE 'UTC') = CURRENT_DATE
+      WHERE t.terminal_id = $1 AND t.establecimiento_id = $2 AND t.estado = true and DATE(fecha AT TIME ZONE 'America/Mexico_City' AT TIME ZONE 'UTC') = CURRENT_DATE
       GROUP BY t.tipo_combustible_id, tc.name;
     `;
 
