@@ -30,34 +30,44 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Query 1: Transacciones por canal
     const channelQuery = `
-      SELECT 
-        c.canal AS nombre_canal,
-        t.canal_id AS id_canal,
-        SUM(t.monto) AS total_monto,
-        SUM(t.descuento) AS total_descuento,
-        SUM(t.unidades) AS total_unidades
-      FROM transacciones t
-      JOIN costos cs ON t.establecimiento_id = cs.id
-      JOIN canales c ON t.canal_id = c.id
-      WHERE t.terminal_id = $1 AND t.establecimiento_id = $2 AND t.estado = true AND  DATE(fecha AT TIME ZONE 'America/Mexico_City' AT TIME ZONE 'UTC') = CURRENT_DATE
-      GROUP BY c.canal, t.canal_id;
+    SELECT 
+    c.canal AS nombre_canal,
+    t.canal_id AS id_canal,
+    SUM(t.monto) AS total_monto,
+    SUM(t.descuento) AS total_descuento,
+    SUM(t.unidades) AS total_unidades
+FROM transacciones t
+JOIN costos cs ON t.establecimiento_id = cs.id
+JOIN canales c ON t.canal_id = c.id
+WHERE 
+    t.terminal_id = $1 
+    AND t.establecimiento_id = $2 
+    AND t.estado = true 
+       AND fecha >= CURRENT_DATE::timestamp
+    AND fecha < (CURRENT_DATE + INTERVAL '1 day')::timestamp
+GROUP BY c.canal, t.canal_id;
     `;
 
     // Query 2: Transacciones por tipo de combustible
     const fuelTypeQuery = `
      
-      SELECT 
-        t.tipo_combustible_id,
-        tc.name AS tipo_combustible,
-        SUM(t.monto) AS total_monto,
-        SUM(t.descuento) AS total_descuento,
-        SUM(t.unidades) AS total_unidades
-      FROM transacciones t
-      JOIN costos cs ON t.establecimiento_id = cs.id
-      JOIN canales c ON t.canal_id = c.id
-      JOIN tipo_combustible tc ON t.tipo_combustible_id = tc.id
-      WHERE t.terminal_id = $1 AND t.establecimiento_id = $2 AND t.estado = true and DATE(fecha AT TIME ZONE 'America/Mexico_City' AT TIME ZONE 'UTC') = CURRENT_DATE
-      GROUP BY t.tipo_combustible_id, tc.name;
+SELECT 
+    t.tipo_combustible_id,
+    tc.name AS tipo_combustible,
+    SUM(t.monto) AS total_monto,
+    SUM(t.descuento) AS total_descuento,
+    SUM(t.unidades) AS total_unidades
+FROM transacciones t
+JOIN costos cs ON t.establecimiento_id = cs.id
+JOIN canales c ON t.canal_id = c.id
+JOIN tipo_combustible tc ON t.tipo_combustible_id = tc.id
+WHERE 
+    t.terminal_id = $1 
+    AND t.establecimiento_id = $2 
+    AND t.estado = true 
+    AND fecha >= CURRENT_DATE::timestamp
+    AND fecha < (CURRENT_DATE + INTERVAL '1 day')::timestamp
+GROUP BY t.tipo_combustible_id, tc.name;
     `;
 
     // Ejecutar ambas consultas
