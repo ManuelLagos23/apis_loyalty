@@ -39,12 +39,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       FROM transacciones t
       JOIN costos cs ON t.establecimiento_id = cs.id
       JOIN canales c ON t.canal_id = c.id
-      WHERE t.terminal_id = $1 AND t.establecimiento_id = $2 AND t.estado = true AND DATE(t.fecha) = CURRENT_DATE
+      WHERE t.terminal_id = $1 AND t.establecimiento_id = $2 AND t.estado = true AND  DATE(fecha AT TIME ZONE 'America/Mexico_City' AT TIME ZONE 'UTC') = CURRENT_DATE
       GROUP BY c.canal, t.canal_id;
     `;
 
     // Query 2: Transacciones por tipo de combustible
     const fuelTypeQuery = `
+     
       SELECT 
         t.tipo_combustible_id,
         tc.name AS tipo_combustible,
@@ -55,7 +56,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       JOIN costos cs ON t.establecimiento_id = cs.id
       JOIN canales c ON t.canal_id = c.id
       JOIN tipo_combustible tc ON t.tipo_combustible_id = tc.id
-      WHERE t.terminal_id = $1 AND t.establecimiento_id = $2 AND t.estado = true AND DATE(t.fecha) = CURRENT_DATE
+      WHERE t.terminal_id = 1 AND t.establecimiento_id = 1 AND t.estado = true and DATE(fecha AT TIME ZONE 'America/Mexico_City' AT TIME ZONE 'UTC') = CURRENT_DATE
       GROUP BY t.tipo_combustible_id, tc.name;
     `;
 
