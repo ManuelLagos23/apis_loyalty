@@ -14,10 +14,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const selectQuery = `
-      SELECT id, cliente_id, establecimiento_id, fecha, monto, terminal_id 
+      SELECT 
+    id, 
+    cliente_id, 
+    establecimiento_id, 
+    fecha, 
+    monto, 
+    terminal_id 
 FROM transacciones 
-WHERE terminal_id = $1 AND estado = true 
-AND DATE(fecha AT TIME ZONE 'America/Mexico_City' AT TIME ZONE 'UTC') = CURRENT_DATE;
+WHERE 
+    terminal_id = $1 
+    AND estado = true 
+       AND fecha >= CURRENT_DATE::timestamp
+    AND fecha < (CURRENT_DATE + INTERVAL '1 day')::timestamp;
     `;
     
     const result = await executePgQuery(selectQuery, [terminal_id]);
