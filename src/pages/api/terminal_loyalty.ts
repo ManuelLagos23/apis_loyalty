@@ -27,20 +27,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         monto, 
         terminal_id, 
         tipo_combustible_id, 
-        turno_id,
         descuento = 0, 
         unidades = null 
       } = data;
 
-      // Validar campos obligatorios, incluyendo turno_id
-      if (!establecimiento_id || !fecha || !monto || !terminal_id || !tipo_combustible_id || !Number.isInteger(Number(turno_id))) {
-        errors.push(`Faltan campos obligatorios o turno_id no es un número en el registro: ${JSON.stringify(data)}`);
-        console.log("Faltan campos obligatorios o turno_id no es un número en el registro: ", data);
+      // Validar campos obligatorios
+      if (!establecimiento_id || !fecha || !monto || !terminal_id || !tipo_combustible_id) {
+        errors.push(`Faltan campos obligatorios en el registro: ${JSON.stringify(data)}`);
+        console.log("Faltan campos obligatorios en el registro: ", data);
         continue;
       }
 
       // Si no hay cliente_id pero hay numero_tarjeta, buscar cliente_id usando los últimos 4 dígitos
       if (!cliente_id && numero_tarjeta) {
+        // Validar que numero_tarjeta sea una cadena
+        if (typeof numero_tarjeta !== 'string') {
+          errors.push(`El número de tarjeta debe ser una cadena: ${JSON.stringify(numero_tarjeta)}`);
+          console.log(`El número de tarjeta debe ser una cadena: ${JSON.stringify(numero_tarjeta)}`);
+          continue;
+        }
+
         // Validar que numero_tarjeta tenga exactamente 4 dígitos y sean numéricos
         if (!/^\d{4}$/.test(numero_tarjeta)) {
           errors.push(`El número de tarjeta debe contener exactamente 4 dígitos numéricos: ${numero_tarjeta}`);
@@ -48,13 +54,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           continue;
         }
 
+        // Convertir numero_tarjeta a número
+        const numero_tarjeta_num = Number(numero_tarjeta);
+
+        // Validar que la conversión a número sea válida
+        if (isNaN(numero_tarjeta_num)) {
+          errors.push(`El número de tarjeta no se pudo convertir a número: ${numero_tarjeta}`);
+          console.log(`El número de tarjeta no se pudo convertir a número: ${numero_tarjeta}`);
+          continue;
+        }
+
         const getClienteIdQuery = `
           SELECT cliente_id 
           FROM tarjetas 
-          WHERE RIGHT(numero_tarjeta, 4) = $1;
+          WHERE RIGHT(numero_tarjeta, 4)::integer = $1;
         `;
         
-        const clienteResult = await executePgQuery(getClienteIdQuery, [numero_tarjeta]);
+        const clienteResult = await executePgQuery(getClienteIdQuery, [numero_tarjeta_num]);
         cliente_id = clienteResult[0]?.cliente_id;
 
         if (!cliente_id) {
@@ -95,18 +111,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           terminal_id, 
           numero_tarjeta, 
           tipo_combustible_id, 
-          turno_id,
           descuento, 
           unidades, 
           canal_id, 
-          turno_estado,
           estado
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, true)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, true)
         RETURNING id;
       `;
-
-      const turno_estado = 'open';
 
       const transactionResult = await executePgQuery(insertTransactionQuery, [
         cliente_id,
@@ -116,11 +128,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         terminal_id,
         numero_tarjeta || null,
         tipo_combustible_id,
-        turno_id,
         descuento,
         unidades,
-        canal_id || null,
-        turno_estado
+        canal_id || null
       ]);
       const transaccion_id = transactionResult[0]?.id;
 
