@@ -38,20 +38,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         continue;
       }
 
-      // Si no hay cliente_id pero hay numero_tarjeta, buscar cliente_id
+      // Si no hay cliente_id pero hay numero_tarjeta, buscar cliente_id usando los últimos 4 dígitos
       if (!cliente_id && numero_tarjeta) {
+        // Asegurarse de que numero_tarjeta tenga al menos 4 dígitos
+        if (numero_tarjeta.length < 4) {
+          errors.push(`El número de tarjeta proporcionado es demasiado corto: ${numero_tarjeta}`);
+          console.log(`El número de tarjeta proporcionado es demasiado corto: ${numero_tarjeta}`);
+          continue;
+        }
+
         const getClienteIdQuery = `
           SELECT cliente_id 
           FROM tarjetas 
-          WHERE numero_correlativo = $1;
+          WHERE RIGHT(numero_tarjeta, 4) = $1;
         `;
         
-        const clienteResult = await executePgQuery(getClienteIdQuery, [numero_tarjeta]);
+        const lastFourDigits = numero_tarjeta.slice(-4); // Extraer los últimos 4 dígitos
+        const clienteResult = await executePgQuery(getClienteIdQuery, [lastFourDigits]);
         cliente_id = clienteResult[0]?.cliente_id;
 
         if (!cliente_id) {
-          errors.push(`No se encontró cliente_id para el número de tarjeta: ${numero_tarjeta}`);
-          console.log(`No se encontró cliente_id para el número de tarjeta: ${numero_tarjeta}`);
+          errors.push(`No se encontró cliente_id para los últimos 4 dígitos del número de tarjeta: ${lastFourDigits}`);
+          console.log(`No se encontró cliente_id para los últimos 4 dígitos del número de tarjeta: ${lastFourDigits}`);
           continue;
         }
       }
