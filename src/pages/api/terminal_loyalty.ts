@@ -43,7 +43,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const getClienteIdQuery = `
           SELECT cliente_id 
           FROM tarjetas 
-          WHERE numero_tarjeta = $1;
+          WHERE numero_correlativo = $1;
         `;
         
         const clienteResult = await executePgQuery(getClienteIdQuery, [numero_tarjeta]);
