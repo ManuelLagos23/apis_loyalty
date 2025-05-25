@@ -19,13 +19,29 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-    // Si no hay cliente_id pero hay numero_tarjeta, buscar cliente_id
+    // Si no hay cliente_id pero hay numero_tarjeta, buscar cliente_id usando los últimos 4 dígitos
     let finalClienteId = cliente_id;
     if (!finalClienteId && numero_tarjeta) {
+      // Validar que numero_tarjeta sea una cadena
+      if (typeof numero_tarjeta !== 'string') {
+        return res.status(400).json({
+          success: false,
+          error: `El número de tarjeta debe ser una cadena: ${JSON.stringify(numero_tarjeta)}`
+        });
+      }
+
+      // Validar que numero_tarjeta tenga exactamente 4 dígitos y sean numéricos
+      if (!/^\d{4}$/.test(numero_tarjeta)) {
+        return res.status(400).json({
+          success: false,
+          error: `El número de tarjeta debe contener exactamente 4 dígitos numéricos: ${numero_tarjeta}`
+        });
+      }
+
       const getClienteIdQuery = `
         SELECT cliente_id 
         FROM tarjetas 
-        WHERE numero_tarjeta = $1;
+        WHERE RIGHT(numero_tarjeta, 4) = $1;
       `;
       
       const clienteResult = await executePgQuery(getClienteIdQuery, [numero_tarjeta]);
@@ -34,7 +50,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (!finalClienteId) {
         return res.status(400).json({
           success: false,
-          error: `No se encontró cliente_id para el número de tarjeta: ${numero_tarjeta}`
+          error: `No se encontró cliente_id para los últimos 4 dígitos del número de tarjeta: ${numero_tarjeta}`
         });
       }
     }
@@ -105,16 +121,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       console.log(`No se encontró canal_id para cliente_id: ${finalClienteId}`);
     }
 
-return res.status(200).json({
-  success: true,
-  message: 'Unidades y descuento calculados con éxito.',
-  cliente_id: finalClienteId,
-  unidades: Number(unidades.toFixed(2)),
-  monto_descuento: Number(monto_descuento.toFixed(2))
-});
+    return res.status(200).json({
+      success: true,
+      message: 'Unidades y descuento calculados con éxito.',
+      cliente_id: finalClienteId,
+      unidades: Number(unidades.toFixed(2)),
+      monto_descuento: Number(monto_descuento.toFixed(2))
+    });
 
   } catch (error) {
     console.error('Error en la API:', error);
     return res.status(500).json({ success: false, error: 'Error interno del servidor' });
+ 
   }
 }
