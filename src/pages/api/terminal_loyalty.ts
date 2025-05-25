@@ -39,17 +39,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       // Si no hay cliente_id pero hay numero_tarjeta, buscar cliente_id usando los últimos 4 dígitos
-      if (!cliente_id && numero_tarjeta !== undefined && numero_tarjeta !== null) {
-        // Validar que numero_tarjeta sea un número
-        if (typeof numero_tarjeta !== 'number' || isNaN(numero_tarjeta)) {
-          errors.push(`El número de tarjeta debe ser un número válido: ${JSON.stringify(numero_tarjeta)}`);
-          console.log(`El número de tarjeta debe ser un número válido: ${JSON.stringify(numero_tarjeta)}`);
+      if (!cliente_id && numero_tarjeta) {
+        // Validar que numero_tarjeta sea una cadena
+        if (typeof numero_tarjeta !== 'string') {
+          errors.push(`El número de tarjeta debe ser una cadena: ${JSON.stringify(numero_tarjeta)}`);
+          console.log(`El número de tarjeta debe ser una cadena: ${JSON.stringify(numero_tarjeta)}`);
           continue;
         }
 
-        // Validar que numero_tarjeta tenga exactamente 4 dígitos
-        const numero_tarjeta_str = numero_tarjeta.toString();
-        if (!/^\d{4}$/.test(numero_tarjeta_str)) {
+        // Validar que numero_tarjeta tenga exactamente 4 dígitos y sean numéricos
+        if (!/^\d{4}$/.test(numero_tarjeta)) {
           errors.push(`El número de tarjeta debe contener exactamente 4 dígitos numéricos: ${numero_tarjeta}`);
           console.log(`El número de tarjeta debe contener exactamente 4 dígitos numéricos: ${numero_tarjeta}`);
           continue;
@@ -61,7 +60,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           WHERE RIGHT(numero_tarjeta, 4) = $1;
         `;
         
-        const clienteResult = await executePgQuery(getClienteIdQuery, [numero_tarjeta_str]);
+        const clienteResult = await executePgQuery(getClienteIdQuery, [numero_tarjeta]);
         cliente_id = clienteResult[0]?.cliente_id;
 
         if (!cliente_id) {
@@ -117,7 +116,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         fecha,
         monto,
         terminal_id,
-        numero_tarjeta ? numero_tarjeta.toString() : null,
+        numero_tarjeta || null,
         tipo_combustible_id,
         descuento,
         unidades,
