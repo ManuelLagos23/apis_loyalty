@@ -112,8 +112,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const descuento = descuentoResult[0]?.descuento;
 
       if (descuento != null && descuento >= 0) {
-        // Calcular monto del descuento: unidades * (descuento / 100) * precio
-        monto_descuento = unidades * (descuento / 100) * precio;
+        // Nueva fórmula de descuento: (1/3.8) * descuento * precio
+        const factor = 1 / 3.8;
+        monto_descuento = factor * descuento * precio;
       } else {
         console.log(`No se encontró un descuento válido para canal_id: ${canal_id}, tipo_combustible_id: ${tipo_combustible_id}`);
       }
@@ -132,6 +133,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   } catch (error) {
     console.error('Error en la API:', error);
     return res.status(500).json({ success: false, error: 'Error interno del servidor' });
- 
   }
 }
