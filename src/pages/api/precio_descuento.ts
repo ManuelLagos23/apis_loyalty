@@ -112,9 +112,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const descuento = descuentoResult[0]?.descuento;
 
       if (descuento != null && descuento >= 0) {
-        // Nueva fórmula de descuento: (1/3.8) * descuento * precio
+        // Nueva fórmula de descuento: (1/3.8) * descuento * unidades
         const factor = 1 / 3.8;
-        monto_descuento = factor * descuento * precio;
+        monto_descuento = factor * descuento * unidades;
       } else {
         console.log(`No se encontró un descuento válido para canal_id: ${canal_id}, tipo_combustible_id: ${tipo_combustible_id}`);
       }
