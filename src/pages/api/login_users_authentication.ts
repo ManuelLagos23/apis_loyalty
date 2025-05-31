@@ -63,7 +63,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       SELECT 
         t.id,
      
-        e.nombre_empresa AS empresa_nombre,
+        e.id AS empresa_id,
         
         t.estacion_servicio as establecimiento_id,
         t.codigo_terminal,
