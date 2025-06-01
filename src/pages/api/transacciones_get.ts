@@ -24,6 +24,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 FROM transacciones 
 WHERE 
     terminal_id = $1 
+    AND turno_estado = 'open'
     AND estado = true 
        AND fecha >= CURRENT_DATE::timestamp
     AND fecha < (CURRENT_DATE + INTERVAL '1 day')::timestamp;
