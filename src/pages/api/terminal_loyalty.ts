@@ -28,11 +28,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         terminal_id, 
         tipo_combustible_id, 
         descuento = 0, 
+        turno_id = 0, 
         unidades = null 
       } = data;
 
       // Validar campos obligatorios
-      if (!establecimiento_id || !fecha || !monto || !terminal_id || !tipo_combustible_id) {
+      if (!establecimiento_id || !fecha || !monto || !terminal_id || !tipo_combustible_id  || !turno_id) {
         errors.push(`Faltan campos obligatorios en el registro: ${JSON.stringify(data)}`);
         console.log("Faltan campos obligatorios en el registro: ", data);
         continue;
@@ -104,12 +105,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           descuento, 
           unidades, 
           canal_id, 
+            turno_id, 
+                 turno_estado, 
           estado
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, true)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'open', true)
         RETURNING id;
       `;
 
+
+     
       const transactionResult = await executePgQuery(insertTransactionQuery, [
         cliente_id,
         establecimiento_id,
@@ -120,7 +125,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         tipo_combustible_id,
         descuento,
         unidades,
-        canal_id || null
+        canal_id || null,
+          turno_id
       ]);
       const transaccion_id = transactionResult[0]?.id;
 
