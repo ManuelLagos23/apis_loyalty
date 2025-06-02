@@ -17,16 +17,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-    const { miembro_id, empresa_id, establecimiento_id, terminal_id, fecha_inicio, fecha_final, nombre_empleado } = dataArray[0];
+    const { miembro_id, empresa_id, establecimiento_id, terminal_id, fecha_inicio} = dataArray[0];
 
     // Validate all required fields
     if (!Number.isInteger(Number(miembro_id)) ||
         !Number.isInteger(Number(empresa_id)) ||
         !Number.isInteger(Number(establecimiento_id)) ||
         !Number.isInteger(Number(terminal_id)) ||
-        !fecha_inicio ||
-        !fecha_final ||
-        !nombre_empleado) {
+        !fecha_inicio ) {
       return res.status(400).json({ 
         success: false, 
         error: 'Los campos miembro_id, empresa_id, establecimiento_id, terminal_id, fecha_inicio, fecha_final y nombre_empleado son obligatorios' 
@@ -34,7 +32,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Validate date formats
-    if (isNaN(Date.parse(fecha_inicio)) || isNaN(Date.parse(fecha_final))) {
+    if (isNaN(Date.parse(fecha_inicio)) ) {
       return res.status(400).json({
         success: false,
         error: 'Las fechas deben estar en un formato válido (ISO 8601)'
@@ -48,10 +46,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         establecimiento_id,
         terminal_id,
         fecha_inicio,
-        fecha_final,
-        nombre_empleado,
+   
         estado
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, true)
+      ) VALUES ($1, $2, $3, $4, $5, true)
       RETURNING 
         id,
         miembro_id,
@@ -59,8 +56,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         establecimiento_id,
         terminal_id,
         fecha_inicio AT TIME ZONE 'UTC' AT TIME ZONE 'America/Tegucigalpa' AS fecha_inicio,
-        fecha_final AT TIME ZONE 'UTC' AT TIME ZONE 'America/Tegucigalpa' AS fecha_final,
-        nombre_empleado,
+
         estado
     `;
 
@@ -69,12 +65,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       empresa_id,
       establecimiento_id,
       terminal_id,
-      fecha_inicio,
-      fecha_final,
-      nombre_empleado
+      fecha_inicio
     ]);
 
-    return res.status(201).json({
+    return res.status(200).json({
       success: true,
       data: result[0] // Return the inserted record
     });
