@@ -27,13 +27,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-    const { turno_id } = dataArray[0];
+    const { turno_id, fecha_final } = dataArray[0];
+    
 
     // Validate turno_id is a number
     if (turno_id === undefined || turno_id === null || !Number.isInteger(Number(turno_id))) {
       return res.status(400).json({ 
         success: false, 
         error: 'El campo turno_id es obligatorio y debe ser un número dentro del primer objeto de dataArray' 
+      });
+    }
+
+    // Validate turno_id is a number
+    if (fecha_final === undefined || fecha_final === null) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'El campo fecha final es obligatorio y debe ser una fecha dentro del primer objeto de dataArray' 
       });
     }
 
@@ -58,8 +67,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     
     const updateTurnoQuery = `
       UPDATE turnos
-      SET estado = false
-      WHERE id = $1
+      SET estado = false, fecha_final = $1
+      WHERE id = $2
       RETURNING id;
     `;
 
@@ -67,7 +76,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const updatedTransactions = transactions.length > 0 
       ? await executePgQuery(updateTransactionsQuery, [turno_id]) 
       : [];
-    const updatedTurno = await executePgQuery(updateTurnoQuery, [turno_id]);
+
+    const updatedTurno = await executePgQuery(updateTurnoQuery, [fecha_final, turno_id]);
 
     // Check if turno was found and updated
     if (updatedTurno.length === 0) {
