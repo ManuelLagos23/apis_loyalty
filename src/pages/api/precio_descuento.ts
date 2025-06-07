@@ -1,3 +1,4 @@
+                                                                              
 import { NextApiRequest, NextApiResponse } from 'next';
 import { executePgQuery } from '@/lib/database';
 
@@ -39,11 +40,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       const getClienteIdQuery = `
-        SELECT cliente_id 
-        FROM tarjetas 
+        SELECT cliente_id
+        FROM tarjetas
         WHERE RIGHT(numero_tarjeta, 4) = $1;
       `;
-      
+
       const clienteResult = await executePgQuery(getClienteIdQuery, [numero_tarjeta]);
       finalClienteId = clienteResult[0]?.cliente_id;
 
@@ -65,14 +66,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Buscar el precio en precio_venta_combustible
     const getPrecioQuery = `
-      SELECT precio 
-      FROM precio_venta_combustible 
+      SELECT precio
+      FROM precio_venta_combustible
       WHERE precio_sucursal_ids = $1
       AND tipo_combustible_id = $2
       AND $3::date BETWEEN fecha_inicio AND fecha_final;
     `;
 
-    const precioResult = await executePgQuery(getPrecioQuery, [establecimiento_id, tipo_combustible_id, fecha]);
+  const precioResult = await executePgQuery(getPrecioQuery, [establecimiento_id, tipo_combustible_id, fecha]);
     const precio = precioResult[0]?.precio;
 
     if (!precio || precio <= 0) {
@@ -90,8 +91,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Obtener canal_id desde la tabla clientes
     const getCanalQuery = `
-      SELECT canal_id 
-      FROM clientes 
+      SELECT canal_id
+      FROM clientes
       WHERE id = $1;
     `;
 
@@ -101,8 +102,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (canal_id) {
       // Obtener descuento desde la tabla descuentos
       const getDescuentoQuery = `
-        SELECT descuento 
-        FROM descuentos 
+        SELECT descuento
+        FROM descuentos
         WHERE canal_id = $1
         AND tipo_combustible_id = $2
         AND active = true;
@@ -113,8 +114,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       if (descuento != null && descuento >= 0) {
         // Nueva fórmula de descuento: (1/3.8) * descuento * unidades
-        const factor = 1 / 3.8;
-        monto_descuento = factor * descuento * unidades;
+        
+        monto_descuento =  descuento * unidades;
       } else {
         console.log(`No se encontró un descuento válido para canal_id: ${canal_id}, tipo_combustible_id: ${tipo_combustible_id}`);
       }
@@ -135,3 +136,4 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(500).json({ success: false, error: 'Error interno del servidor' });
   }
 }
+
