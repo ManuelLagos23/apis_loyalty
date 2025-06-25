@@ -28,13 +28,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         tipo_combustible_id, 
         turno_id, 
         establecimiento_id, 
-        precio 
+        precio,
+        terminal_id // Nuevo campo
       } = data;
 
       // Validar campos obligatorios
-      if (!monto || !created_at || !tipo_combustible_id || !turno_id || !establecimiento_id || !precio || !numero_tarjeta) {
+      if (!monto || !created_at || !tipo_combustible_id || !turno_id || !establecimiento_id || !precio || !numero_tarjeta || !terminal_id) {
         validationErrors.push(`Faltan campos obligatorios en el registro: ${JSON.stringify(data)}`);
         console.log("Faltan campos obligatorios en el registro: ", data);
+        continue;
+      }
+
+      // Validar que terminal_id sea un número entero
+      if (!Number.isInteger(terminal_id)) {
+        validationErrors.push(`El terminal_id debe ser un número entero: ${terminal_id}`);
+        console.log(`El terminal_id debe ser un número entero: ${terminal_id}`);
         continue;
       }
 
@@ -137,7 +145,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         tipo_combustible_id, 
         turno_id, 
         establecimiento_id, 
-        precio 
+        precio,
+        terminal_id // Nuevo campo
       } = data;
 
       // Calcular unidades (en litros)
@@ -173,9 +182,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           canal_id, 
           subcanal_id, 
           turno_estado, 
-          estado
+          estado,
+          terminal_id // Nuevo campo
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, 'open', true)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, 'open', true, $15)
         RETURNING id;
       `;
 
@@ -197,6 +207,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         monedero_id,
         canal_id || null,
         subcanal_id || null,
+        terminal_id // Nuevo campo
       ]);
 
       const transaccion_id = transactionResult[0]?.id;
@@ -250,13 +261,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
       }
 
-      // Actualizar odómetro en la tabla vehiculos si vehiculo_id y odometro están presentes
+      // Actualizar odómetro y ultimo_odometro en la tabla vehiculos si vehiculo_id y odometro están presentes
       if (vehiculo_id && odometro !== null && odometro !== undefined) {
         const updateVehicleOdometerQuery = `
           UPDATE vehiculos
-          SET odometro = $1
+          SET ultimo_odometro = odometro,
+              odometro = $1
           WHERE id = $2
-          RETURNING id;
+          RETURNING id, ultimo_odometro, odometro;
         `;
         
         try {
@@ -265,7 +277,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             errors.push(`No se encontró vehículo con id ${vehiculo_id} para actualizar el odómetro.`);
             console.log(`No se encontró vehículo con id ${vehiculo_id} para actualizar el odómetro.`);
           } else {
-            console.log(`Odómetro actualizado para vehículo id ${vehiculo_id}: ${odometro}`);
+            console.log(`Odómetro actualizado para vehículo id ${vehiculo_id}: ` +
+                        `ultimo_odometro=${updateResult[0].ultimo_odometro}, odometro=${updateResult[0].odometro}`);
           }
         } catch (updateError) {
           errors.push(`Error al actualizar el odómetro para vehículo id ${vehiculo_id}: ${(updateError as Error).message}`);
