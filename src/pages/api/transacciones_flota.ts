@@ -183,7 +183,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           subcanal_id, 
           turno_estado, 
           estado,
-          terminal_id // Nuevo campo
+          terminal_id 
         )
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, 'open', true, $15)
         RETURNING id;
